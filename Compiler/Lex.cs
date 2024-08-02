@@ -167,7 +167,7 @@ namespace FocalCompiler
             if (parser == null)
             {
                 //1:$[1] # 2:$[2] # 3:$[3] # 4:$[4] # 5:$[5] # 6:$[6] # 7:$[7] # 8:$[8] # 9:$[9] # 10:$[10] # 11:$[11] # 12:$[12]
-                parser = new Regex (@"(""(.+)"")|(((-?\d*\.?\d+((e)-?\d+)?)|(e-?\d+))(?=[\t ,]|$))|(ind)|([A-Z](?=[\t ,]|$))|(;.*$)|(,)|(>)|([^, \t]+)", RegexOptions.IgnoreCase);
+                parser = new Regex(@"(""(.*)"")|(((-?\d*\.?\d+((e)-?\d+)?)|(e-?\d+))(?=[\t ,]|$))|(ind)|([A-Z](?=[\t ,]|$))|(;.*$)|(,)|(>)|([^, \t]+)", RegexOptions.IgnoreCase);
             }
 
             match = parser.Match (line);
