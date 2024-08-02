@@ -71,7 +71,7 @@ namespace FocalCompiler
                 {
                     short Value;
 
-                    if (parameter.GetStackParamter(token.StringValue, out Value))
+                    if (parameter.GetStackParameter(token.StringValue, out Value))
                     {
                         outCode = new byte[2];
                         outCode[0] = (byte)(opCode.Function & 0xff);
@@ -101,7 +101,7 @@ namespace FocalCompiler
                         {
                             short Value;
 
-                            if (parameter.GetStackParamter(token.StringValue, out Value))
+                            if (parameter.GetStackParameter(token.StringValue, out Value))
                             {
                                 outCode = new byte[2];
                                 outCode[0] = (byte)(opCode.Function & 0xff);
@@ -185,7 +185,7 @@ namespace FocalCompiler
                         {
                             short Value;
 
-                            if (parameter.GetStackParamter(token.StringValue, out Value))
+                            if (parameter.GetStackParameter(token.StringValue, out Value))
                             {
                                 outCode = new byte[2];
                                 outCode[0] = (byte)(opCode.IndirectFunction & 0xff);
@@ -269,7 +269,7 @@ namespace FocalCompiler
                         {
                             short Value;
 
-                            if (parameter.GetStackParamter(token.StringValue, out Value))
+                            if (parameter.GetStackParameter(token.StringValue, out Value))
                             {
                                 outCode = new byte[2];
                                 outCode[0] = (byte)(opCode.IndirectFunction & 0xff);
@@ -306,7 +306,6 @@ namespace FocalCompiler
 
         CompileResult CompileMnemonicType5(OpCode opCode, out byte[] outCode, out string errorMsg)
         {
-            CompileResult result = CompileResult.Ok;
             errorMsg = string.Empty;
             Token token = new Token();
 
@@ -329,9 +328,8 @@ namespace FocalCompiler
                     }
                     else
                     {
-                        outCode = null;
-                        result = CompileResult.CompileError;
                         errorMsg = string.Format("Parameter out of range \"{0}\"", token.StringValue);
+                        goto lbl_compilation_did_fail;
                     }
                     break;
 
@@ -339,7 +337,7 @@ namespace FocalCompiler
                 {
                     short Value;
 
-                    if (parameter.GetShortLabelParamter(token.StringValue, out Value))
+                    if (parameter.GetShortLabelParameter(token.StringValue, out Value))
                     {
                         outCode = new byte[2];
                         outCode[0] = (byte)(opCode.Function & 0xff);
@@ -347,45 +345,46 @@ namespace FocalCompiler
                     }
                     else
                     {
-                        outCode = null;
-                        result = CompileResult.CompileError;
                         errorMsg = string.Format("Parameter out of range \"{0}\"", token.StringValue);
+                        goto lbl_compilation_did_fail;
                     }
                     break;
                 }
 
                 case Token.TokType.Text:
-                    if (token.StringValue.Length <= 14)
-                    {
-                        outCode = new byte[token.StringValue.Length + 4];
-                        outCode[0] = (byte)opCode.AlphaFunction;
-                        outCode[1] = 0x00;
-                        outCode[2] = (byte)(0xF1 + token.StringValue.Length);
-                        outCode[3] = 0x00;
-
-                        int outCodeLength = 4;
-
-                        foreach (char c in token.StringValue)
-                        {
-                            outCode[outCodeLength++] = (byte)HP41CharacterConverter.ToHp41(c);
-                        }
-                    }
-                    else
                     {
                         outCode = null;
-                        result = CompileResult.CompileError;
-                        errorMsg = string.Format("Parameter out of range \"{0}\"", token.StringValue);
+                        int maxNumberOfBytes = 18;
+                        byte[] code = new byte[maxNumberOfBytes];
+                        int codeIndex = 0;
+                        code[codeIndex++] = (byte)opCode.AlphaFunction;
+                        code[codeIndex++] = 0x00;
+                        code[codeIndex++] = (byte)0xF1;
+                        code[codeIndex++] = 0x00;
+
+                        if (ConvertText("label",
+                            token.StringValue,
+                            code, codeIndex,
+                            out int numberOfGeneratedBytes,
+                            out errorMsg) == CompileResult.CompileError)
+                            goto lbl_compilation_did_fail;
+
+                        code[2] += (byte)numberOfGeneratedBytes;
+                        Array.Resize(ref code, numberOfGeneratedBytes + 4);
+                        outCode = code; 
                     }
                     break;
 
                 default:
-                    outCode = null;
-                    result = CompileResult.CompileError;
                     errorMsg = string.Format("Wrong parameter type or parameter expected");
-                    break;
+                    goto lbl_compilation_did_fail;
             }
 
-            return result;
+            return CompileResult.Ok;
+
+        lbl_compilation_did_fail:
+            outCode = null;
+            return CompileResult.CompileError;
         }
 
         /////////////////////////////////////////////////////////////
@@ -427,7 +426,7 @@ namespace FocalCompiler
                 {
                     short Value;
 
-                    if (parameter.GetShortLabelParamter(token.StringValue, out Value))
+                    if (parameter.GetShortLabelParameter(token.StringValue, out Value))
                     {
                         outCode = new byte[3];
                         outCode[0] = (byte)(opCode.Function & 0xff);
@@ -444,24 +443,26 @@ namespace FocalCompiler
                 }
 
                 case Token.TokType.Text:
-                    if (token.StringValue.Length <= 14)
                     {
-                        outCode = new byte[token.StringValue.Length + 2];
-                        outCode[0] = (byte)opCode.AlphaFunction;
-                        outCode[1] = (byte)(0xF0 + token.StringValue.Length);
-
-                        int outCodeLength = 2;
-
-                        foreach (char c in token.StringValue)
+                        byte[] code = new byte[16];
+                        code[0] = (byte)opCode.AlphaFunction;
+                        code[1] = (byte)0xF0;
+                        if ((result = ConvertText(
+                            "label",
+                            token.StringValue,
+                            code, 2,
+                            out int numberOfGeneratedBytes,
+                            out errorMsg))
+                            == CompileResult.CompileError)
                         {
-                            outCode[outCodeLength++] = (byte)HP41CharacterConverter.ToHp41(c);
+                            outCode = null;
                         }
-                    }
-                    else
-                    {
-                        outCode = null;
-                        result = CompileResult.CompileError;
-                        errorMsg = string.Format("String too long \"{0}\"", token.StringValue);
+                        else
+                        {
+                            code[1] += (byte)numberOfGeneratedBytes;
+                            Array.Resize(ref code, numberOfGeneratedBytes + 2);
+                            outCode = code;
+                        }
                     }
                     break;
 
@@ -494,7 +495,7 @@ namespace FocalCompiler
                         {
                             short Value;
 
-                            if (parameter.GetStackParamter(token.StringValue, out Value))
+                            if (parameter.GetStackParameter(token.StringValue, out Value))
                             {
                                 outCode = new byte[2];
                                 outCode[0] = (byte)(opCode.IndirectFunction & 0xff);

@@ -307,7 +307,7 @@ namespace FocalDecompiler
                                 {
                                     byteFromFile = inputStream.ReadByte();
                                     dump[dumpidx++] = byteFromFile;
-                                    label += HP41CharacterConverter.FromHp41(byteFromFile);
+                                    label += HP41CharacterEncoding.FormatCharacter((byte)byteFromFile);
                                 }
 
                                 outputStream.AppendLine(string.Format("{0,-4} \"{1}\"", OpCode.Mnemonic, label));
@@ -341,7 +341,7 @@ namespace FocalDecompiler
                             {
                                 byteFromFile = inputStream.ReadByte();
                                 dump[dumpidx++] = byteFromFile;
-                                label += HP41CharacterConverter.FromHp41(byteFromFile);
+                                label += HP41CharacterEncoding.FormatCharacter((byte)byteFromFile);
                             }
 
                             outputStream.AppendLine(string.Format("{0,-4} \"{1}\"", OpCode.Mnemonic, label));
@@ -368,7 +368,7 @@ namespace FocalDecompiler
 
                             while (len-- > 0)
                             {
-                                label += HP41CharacterConverter.FromHp41(byteFromFile);
+                                label += HP41CharacterEncoding.FormatCharacter((byte)byteFromFile);
                                 byteFromFile = inputStream.ReadByte();
                                 dump[dumpidx++] = byteFromFile;
                             }

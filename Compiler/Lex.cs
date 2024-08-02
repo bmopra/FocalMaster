@@ -25,38 +25,6 @@ using System.Text.RegularExpressions;
 
 namespace FocalCompiler
 {
-    class Token
-    {
-        public enum TokType
-        {
-            Id,
-            Int,
-            Letter,
-            Indirect,
-            Komma,
-            Append,
-            Number,
-            Text,
-            Comment,
-            Eol
-        }
-
-        public TokType TokenType;
-        public short IntValue;
-        public string StringValue;
-
-        public Token ()
-        {
-        }
-
-        public Token (Token Token2)
-        {
-            TokenType = Token2.TokenType;
-            IntValue = Token2.IntValue;
-            StringValue = Token2.StringValue;
-        }
-    }
-
     //////////////////////////////////////////////////////////////////
 
     class Lex
@@ -127,7 +95,7 @@ namespace FocalCompiler
 
             if (match.Groups[RegexIdxQuotedText].Success)
             {
-                token.TokenType = Token.TokType.Text;
+                token.TokenType = Token.TokType.Text;                
                 token.StringValue = match.Groups[RegexIdxText].Value;
                 return true;
             }
@@ -167,6 +135,9 @@ namespace FocalCompiler
             if (parser == null)
             {
                 //1:$[1] # 2:$[2] # 3:$[3] # 4:$[4] # 5:$[5] # 6:$[6] # 7:$[7] # 8:$[8] # 9:$[9] # 10:$[10] # 11:$[11] # 12:$[12]
+//                parser = new Regex (@"(""(.+)"")|(((-?\d*\.?\d+((e)-?\d+)?)|(e-?\d+))(?=[\t ,]|$))|(ind)|([A-Z](?=[\t ,]|$))|(;.*$)|(,)|(>)|([^, \t]+)", RegexOptions.IgnoreCase);
+//  Modified to capture empty string, since empty string are supported using
+//  synthetic instruction.
                 parser = new Regex(@"(""(.*)"")|(((-?\d*\.?\d+((e)-?\d+)?)|(e-?\d+))(?=[\t ,]|$))|(ind)|([A-Z](?=[\t ,]|$))|(;.*$)|(,)|(>)|([^, \t]+)", RegexOptions.IgnoreCase);
             }
 

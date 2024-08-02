@@ -23,13 +23,6 @@ using FocalXRomCodes;
 
 namespace FocalCompiler
 {
-    public enum CompileResult
-    {
-        Ok,
-        CompileError,
-        UnknowStatement
-    }
-
     partial class Compiler
     {
         private bool endProcessed = false;
